@@ -86,7 +86,7 @@ body::after {
 /* ---------------- home header ---------------- */
 .home-header { padding: 10px 2px 4px; }
 .home-header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-.app-title { font-size: 1.55rem; color: var(--ink-strong); letter-spacing: -0.02em; }
+.app-title { font-size: 1.55rem; color: var(--ink-strong); letter-spacing: -0.02em; white-space: nowrap; }
 .app-title em { font-style: normal; color: var(--pink); }
 .title-icon { font-size: 1.3rem; margin-right: 4px; }
 .header-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
@@ -436,6 +436,16 @@ body::after {
   transform: translateX(-50%); background: rgba(74, 59, 49, 0.92); color: #fff;
   border-radius: 999px; padding: 12px 22px; font-size: .9rem; font-weight: 700;
   z-index: 200; box-shadow: var(--shadow); animation: fadeIn .2s ease; white-space: nowrap;
+}
+
+/* ---------------- 좁은 폰: 제목이 한 줄로 ---------------- */
+@media (max-width: 519px) {
+  /* 제목이 길어져도 한 줄 유지: 안내 필은 다음 줄로 내려요 */
+  .home-header-top { flex-wrap: wrap; row-gap: 8px; align-items: center; }
+  .header-actions { display: contents; }
+  .app-title { font-size: clamp(1.06rem, 5.4vw, 1.55rem); }
+  .title-icon { font-size: 1.1rem; }
+  .pill-btn { margin-left: auto; padding: 8px 14px; font-size: .8rem; }
 }
 
 /* ---------------- desktop / wide ---------------- */

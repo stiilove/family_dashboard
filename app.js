@@ -293,7 +293,8 @@ function updateSyncStatus(msg) {
   const text = msg || (remoteSync ? '연결됨 ✅ 실시간 동기화 중' : '로컬 저장소만 사용 중 (이 기기에만 저장)');
   if (el) el.textContent = text;
   if (badge) {
-    badge.textContent = msg ? text : (remoteSync ? '☁️ 실시간 동기화 중' : '📴 이 기기에만 저장');
+    const short = msg === '연결됨 ✅ 실시간 동기화 중' ? '' : msg;
+    badge.textContent = short || (remoteSync ? '☁️ 실시간 동기화 중' : '📴 이 기기에만 저장');
     badge.classList.toggle('chip-yellow', !remoteSync);
     badge.classList.toggle('chip-white', remoteSync);
   }
