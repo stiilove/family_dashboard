@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>우리 가족 기록장</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="assets/avatar-eunji.png">
+</head>
+<body>
+<div id="app">
+
+  <!-- ==================== 홈 ==================== -->
+  <section class="view active" id="view-home">
+    <header class="home-header">
+      <div class="home-header-top">
+        <h1 class="app-title"><span class="title-icon">🐹</span>우리 가족 <em>기록장</em></h1>
+        <div class="header-actions">
+          <button class="round-btn" id="btn-settings" aria-label="설정">⚙️<span class="dot"></span></button>
+          <button class="pill-btn" id="btn-encourage">✨ 오늘도 함께 기록해요</button>
+        </div>
+      </div>
+      <p class="today-line" id="today-line">11월 16일 월요일</p>
+      <p class="subtitle">우리집의 포근한 하루</p>
+    </header>
+
+    <!-- 날씨 카드 -->
+    <div class="card weather-card" id="weather-card">
+      <div class="weather-main">
+        <span class="weather-icon" id="weather-icon">🌞</span>
+        <span class="weather-loc">시흥</span>
+        <strong class="weather-temp" id="weather-temp">--°</strong>
+        <span class="weather-sky" id="weather-sky">맑음</span>
+        <span class="weather-minmax" id="weather-minmax">최저 --° · 최고 --°</span>
+        <span class="chip chip-yellow" id="weather-dust">미세먼지 보통</span>
+      </div>
+      <div class="weather-sub">
+        <span class="chip chip-orange" id="weather-tip1">초미세먼지 나쁨</span>
+        <span class="mask-tip" id="weather-tip2">😷 마스크 챙겨요</span>
+      </div>
+    </div>
+
+    <!-- 가족 카드 -->
+    <div class="card family-card">
+      <div id="home-members"></div>
+    </div>
+
+    <!-- 오늘의 가족 미션 -->
+    <div class="card mission-card">
+      <div class="card-head">
+        <h2>🎲 오늘의 가족 미션</h2>
+        <span class="badge" id="mission-together">함께 0번</span>
+      </div>
+      <div class="mission-body">
+        <span class="mission-emoji" id="mission-emoji">🥕</span>
+        <strong class="mission-text" id="mission-text">저녁 준비 같이 돕기</strong>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-green" id="btn-mission-done">✅ 다 같이 했어요</button>
+        <button class="btn btn-white" id="btn-mission-reroll">🔄 다른 미션 뽑기</button>
+      </div>
+      <p class="hint">가족이 다 함께 하는 미션이에요. 하루에 한 번 가볍게 해봐요!</p>
+    </div>
+  </section>
+
+  <!-- ==================== 루틴 ==================== -->
+  <section class="view" id="view-routine">
+    <header class="view-header">
+      <h1>📋 루틴 · 도장판</h1>
+      <p class="view-sub">매일 매일 씩씩하게!</p>
+    </header>
+    <div class="chip-row" id="routine-member-chips"></div>
+    <div class="card stamp-card">
+      <div class="card-head">
+        <h2 id="stamp-title">🐰 시아 도장판</h2>
+        <span class="badge badge-fire" id="stamp-streak">🔥 0일 연속</span>
+      </div>
+      <p class="hint" id="stamp-desc"></p>
+      <div class="week-row" id="stamp-week"></div>
+      <div class="btn-row">
+        <span class="chip chip-white" id="stamp-month">이번 달 도장 0개 · 오늘 콕콕</span>
+        <button class="btn btn-white" id="btn-stamp-calendar">🗓️ 도장판 달력 보기</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h2 id="routine-list-title">🐰 시아의 하루 루틴</h2>
+      </div>
+      <div id="routine-list"></div>
+      <div class="add-row">
+        <input type="text" id="routine-input" placeholder="새 루틴을 적어보세요">
+        <button class="btn btn-green" id="btn-routine-add">추가</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 식사 ==================== -->
+  <section class="view" id="view-meal">
+    <header class="view-header">
+      <h1>🍚 식사 기록</h1>
+      <p class="view-sub">오늘 우리 가족 밥상</p>
+    </header>
+    <div class="card">
+      <div class="card-head"><h2>📅 오늘의 식단</h2><span class="badge" id="meal-date-badge"></span></div>
+      <div class="meal-item" data-meal="breakfast">
+        <div class="meal-label">🌅 아침</div>
+        <textarea id="meal-breakfast" rows="2" placeholder="아침 메뉴를 적어요"></textarea>
+      </div>
+      <div class="meal-item" data-meal="lunch">
+        <div class="meal-label">☀️ 점심</div>
+        <textarea id="meal-lunch" rows="2" placeholder="점심 메뉴를 적어요"></textarea>
+      </div>
+      <div class="meal-item" data-meal="dinner">
+        <div class="meal-label">🌙 저녁</div>
+        <textarea id="meal-dinner" rows="2" placeholder="저녁 메뉴를 적어요"></textarea>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>📝 일주일 식단 플랜</h2></div>
+      <div id="meal-planner"></div>
+      <p class="hint">메뉴를 미리 정해두면 장보기도 편해요.</p>
+    </div>
+  </section>
+
+  <!-- ==================== 일정 ==================== -->
+  <section class="view" id="view-schedule">
+    <header class="view-header">
+      <h1>📅 가족 일정</h1>
+      <p class="view-sub">우리집 이야기 · 다른 기기에 바로 나타나요</p>
+    </header>
+    <div class="card">
+      <div class="card-head"><h2>➕ 일정 추가</h2></div>
+      <div class="add-row">
+        <input type="date" id="event-date">
+        <input type="text" id="event-title" placeholder="일정 내용">
+        <button class="btn btn-green" id="btn-event-add">추가</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>🎈 다가오는 일정</h2></div>
+      <div id="event-list"></div>
+    </div>
+  </section>
+
+  <!-- ==================== 건강 ==================== -->
+  <section class="view" id="view-health">
+    <header class="view-header">
+      <h1>💊 건강 기록</h1>
+      <p class="view-sub">아프지 말고 건강하게!</p>
+    </header>
+    <div class="card">
+      <div class="card-head"><h2>💉 약 챙기기</h2><span class="badge" id="health-date-badge"></span></div>
+      <div class="med-row">
+        <button class="med-toggle" id="med-morning">🌅 아침약</button>
+        <button class="med-toggle" id="med-evening">🌙 저녁약</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>💧 오늘의 건강 노트</h2></div>
+      <div class="health-item">
+        <label for="health-water">💧 물 마시기</label>
+        <input type="text" id="health-water" placeholder="예: 하루 5잔">
+      </div>
+      <div class="health-item">
+        <label for="health-sleep">😴 수면</label>
+        <input type="text" id="health-sleep" placeholder="예: 10시에 잠듦">
+      </div>
+      <div class="health-item">
+        <label for="health-hospital">🏥 병원/특이사항</label>
+        <input type="text" id="health-hospital" placeholder="예: 시아 치과 예약">
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 칭찬 ==================== -->
+  <section class="view" id="view-praise">
+    <header class="view-header">
+      <h1>🌟 칭찬 · 할 일 · 공부</h1>
+      <p class="view-sub">다유니·엄마·아빠가 각자 할 일을 체크해요</p>
+    </header>
+    <div class="card today-todos">
+      <div class="card-head">
+        <h2>☑️ 오늘 할 일</h2>
+        <span class="chip chip-white">체크하면 쿠키 +<span id="todo-cookie-val">1</span></span>
+      </div>
+      <div class="chip-row" id="todo-member-chips"></div>
+      <div id="todo-list"></div>
+      <div class="add-row">
+        <input type="text" id="todo-input" placeholder="새 할 일을 적어보세요">
+        <button class="btn btn-green" id="btn-todo-add">추가</button>
+      </div>
+    </div>
+
+    <div class="card study-card">
+      <div class="card-head">
+        <h2>📚 오늘의 공부 플랜</h2>
+        <span class="chip chip-white" id="study-member-chip">시아</span>
+      </div>
+      <p class="hint">체크 항목마다 정한 쿠키 씩 쏠쏠해요 · 고정 항목은 매일 아침 자동으로 올라와요</p>
+      <div class="btn-row">
+        <button class="btn btn-white" id="btn-study-settings">⚙️ 고정 항목</button>
+        <button class="btn btn-white" id="btn-study-add">＋ 공부 추가</button>
+      </div>
+      <div class="progress-row">
+        <div class="progress"><div class="progress-bar" id="study-progress-bar"></div></div>
+        <span class="progress-label" id="study-progress-label">0 / 0 완료</span>
+      </div>
+      <div id="study-list"></div>
+      <div id="study-custom-list"></div>
+    </div>
+
+    <div class="card timer-card">
+      <div class="card-head"><h2>⏱️ 공부 타이머</h2></div>
+      <div class="seg-row">
+        <button class="seg active" id="seg-countdown">⏳ 남은 시간</button>
+        <button class="seg" id="seg-stopwatch">⏱️ 재는 시간</button>
+      </div>
+      <p class="hint" id="timer-hint">10분 · 시작을 놀러요</p>
+      <div class="timer-display" id="timer-display">10:00</div>
+      <div class="btn-row">
+        <button class="btn btn-green" id="btn-timer-start">▶ 시작</button>
+        <button class="btn btn-white" id="btn-timer-reset">↺ 초기화</button>
+      </div>
+      <div class="preset-row">
+        <button class="chip chip-select preset active" data-min="10">10분</button>
+        <button class="chip chip-select preset" data-min="20">20분</button>
+        <button class="chip chip-select preset" data-min="30">30분</button>
+        <button class="chip chip-select" id="btn-timer-custom">직접</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 쿠키 ==================== -->
+  <section class="view" id="view-cookie">
+    <header class="view-header">
+      <h1>🍪 쿠키 뱅크</h1>
+      <p class="view-sub">쿠키를 모으면 돈으로 교환해요!</p>
+    </header>
+    <div class="chip-row" id="cookie-member-chips"></div>
+    <div class="card cookie-bank-card">
+      <div class="member-head">
+        <span class="avatar big" id="cookie-avatar">🐰</span>
+        <div>
+          <h2 id="cookie-member-name">시아</h2>
+          <p class="hint" id="cookie-member-sub"></p>
+        </div>
+        <span class="money-badge" id="cookie-money">🌙 0원</span>
+      </div>
+      <div class="cookie-balance-row">
+        <span class="cookie-big">🍪</span>
+        <div>
+          <strong class="cookie-count" id="cookie-count">0</strong>
+          <span class="cookie-unit">개</span>
+          <p class="hint" id="cookie-progress-hint">50개 모으면 5,000원!</p>
+        </div>
+      </div>
+      <div class="progress"><div class="progress-bar" id="cookie-progress-bar"></div></div>
+      <button class="btn btn-exchange" id="btn-exchange">🎁 50쿠키 → 5,000원 교환하기</button>
+      <p class="hint" id="exchange-hint"></p>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>📃 쿠키 모은 기록</h2><span class="badge" id="cookie-today-badge">오늘 +0</span></div>
+      <div id="cookie-log"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>💰 교환 기록</h2></div>
+      <div id="exchange-history"></div>
+      <p class="hint">교환한 쿠키는 사라지고, 돈이 저금통에 쏙!</p>
+    </div>
+  </section>
+
+  <!-- ==================== 채팅 ==================== -->
+  <section class="view" id="view-chat">
+    <header class="view-header">
+      <h1>💬 우리 가족 채팅</h1>
+      <p class="view-sub">은지·진우·시아·시은이 여기서 이야기해요</p>
+    </header>
+    <div class="card chat-top-card">
+      <div class="chip-row" id="chat-member-chips"></div>
+      <button class="btn btn-white lock-btn" id="btn-chat-lock">🔒 이 기기 잠금</button>
+      <p class="hint" id="chat-lock-hint">한 번 고르면 이 기기에 기억돼요 · 다음에 또 바꿀 필요 없어요</p>
+    </div>
+    <div class="chat-scroll" id="chat-messages"></div>
+    <div class="chat-input-bar">
+      <button class="round-btn" id="btn-sticker-picker">😀</button>
+      <input type="text" id="chat-input" placeholder="메시지를 입력하세요">
+      <button class="btn btn-green" id="btn-chat-send">보내기</button>
+    </div>
+    <div class="sticker-sheet hidden" id="sticker-sheet">
+      <div class="sticker-grid" id="sticker-grid"></div>
+    </div>
+  </section>
+
+  <!-- ==================== 하단 탭 ==================== -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="nav-btn active" data-view="home"><span>🐹</span>홈</button>
+    <button class="nav-btn" data-view="routine"><span>🐾</span>루틴</button>
+    <button class="nav-btn" data-view="meal"><span>🍚</span>식사</button>
+    <button class="nav-btn" data-view="schedule"><span>📅</span>일정</button>
+    <button class="nav-btn" data-view="health"><span>💊</span>건강</button>
+    <button class="nav-btn" data-view="praise"><span>🌟</span>칭찬</button>
+    <button class="nav-btn" data-view="cookie"><span>🍪</span>쿠키</button>
+    <button class="nav-btn" data-view="chat"><span>💬</span>채팅</button>
+  </nav>
+</div>
+
+<!-- ==================== 모달: 도장판 달력 ==================== -->
+<div class="modal hidden" id="modal-stamp-calendar">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2 id="stamp-cal-title">🐰 시아의 도장판</h2>
+      <button class="round-btn modal-close" data-close="modal-stamp-calendar">✕</button>
+    </div>
+    <div class="cal-nav">
+      <button class="btn btn-white" id="cal-prev">◀</button>
+      <strong id="cal-month-label"></strong>
+      <button class="btn btn-white" id="cal-next">▶</button>
+    </div>
+    <div class="cal-grid" id="stamp-cal-grid"></div>
+    <p class="hint">쿠키 도장이 찍힌 날은 루틴을 다 끝낸 날이에요.</p>
+  </div>
+</div>
+
+<!-- ==================== 모달: 공부 고정 항목 ==================== -->
+<div class="modal hidden" id="modal-study-settings">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2>⚙️ 고정 공부 항목</h2>
+      <button class="round-btn modal-close" data-close="modal-study-settings">✕</button>
+    </div>
+    <p class="hint">매일 아침 자동으로 체크판에 올라와요. 쿠키 개수도 정해요.</p>
+    <div id="fixed-study-list"></div>
+    <div class="add-row">
+      <input type="text" id="fixed-study-input" placeholder="예: 독서 20분">
+      <input type="number" id="fixed-study-cookies" value="1" min="1" class="num-input">
+      <button class="btn btn-green" id="btn-fixed-study-add">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 모달: 설정 ==================== -->
+<div class="modal hidden" id="modal-settings">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2>⚙️ 설정</h2>
+      <button class="round-btn modal-close" data-close="modal-settings">✕</button>
+    </div>
+    <div class="setting-item">
+      <label>쿠키 교환 기준 (개)</label>
+      <input type="number" id="set-cookie-goal" min="1">
+    </div>
+    <div class="setting-item">
+      <label>교환 금액 (원)</label>
+      <input type="number" id="set-exchange-won" min="100" step="100">
+    </div>
+    <div class="setting-item">
+      <label>할 일 1개당 쿠키</label>
+      <input type="number" id="set-todo-cookie" min="1">
+    </div>
+    <div class="setting-item">
+      <label>공부 항목 기본 쿠키</label>
+      <input type="number" id="set-study-cookie" min="1">
+    </div>
+    <div class="setting-item firebase-box">
+      <label>🔥 Firebase 실시간 동기화</label>
+      <p class="hint">여러 폰에서 같은 기록장을 쓰려면 Firebase Realtime Database를 연결해요. 아래에 설정을 붙여넣고 사용 체크를 하면 돼요.</p>
+      <textarea id="set-firebase-config" rows="5" placeholder='{
+  "databaseURL": "https://내프로젝트.firebaseio.com",
+  "apiKey": "..." }'></textarea>
+      <label class="check-label"><input type="checkbox" id="set-firebase-enabled"> 사용하기</label>
+      <p class="hint" id="sync-status"></p>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-green" id="btn-save-settings">저장</button>
+      <button class="btn btn-white" id="btn-reset-data">🔄 처음부터</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
