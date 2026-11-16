@@ -109,10 +109,7 @@ const DEFAULT_STATE = {
     sieun: [{ id: 'sieun1', text: '낮잠 자기' }, { id: 'sieun2', text: '노래 부르기' }],
   },
   routineDone: {},   // memberId -> date -> {routineId: true}
-  meals: {},         // date -> {breakfast, lunch, dinner}
-  mealPlan: { mon: '', tue: '', wed: '', thu: '', fri: '', sat: '', sun: '' },
   events: [],        // {id, date:'YYYY-MM-DD', title}
-  health: {},        // date -> {morning, evening, water, sleep, hospital}
   todos: {           // memberId -> [{id, text}]
     eunji: [], jinu: [],
     sia: [{ id: 'siaT1', text: '책 30분 읽기' }, { id: 'siaT2', text: '내일 준비물 챙기기' }, { id: 'siaT3', text: '공부하기' }],
@@ -434,24 +431,6 @@ function renderStampCalendar() {
   $('#stamp-cal-grid').innerHTML = html;
 }
 
-/* ==================== 식사 ==================== */
-
-function renderMealView() {
-  const dk = todayKey();
-  $('#meal-date-badge').textContent = `${new Date().getMonth() + 1}월 ${new Date().getDate()}일`;
-  const meals = state.meals[dk] || {};
-  ['breakfast', 'lunch', 'dinner'].forEach(k => { $(`#meal-${k}`).value = meals[k] || ''; });
-
-  const labels = { mon: '월요일', tue: '화요일', wed: '수요일', thu: '목요일', fri: '금요일', sat: '토요일', sun: '일요일' };
-  $('#meal-planner').innerHTML = Object.keys(labels).map(k => `
-    <div class="planner-row">
-      <span class="planner-day">${labels[k]}</span>
-      <input type="text" data-plan="${k}" value="${esc(state.mealPlan[k] || '')}" placeholder="메뉴">
-    </div>`).join('');
-  document.querySelectorAll('#meal-planner input').forEach(inp =>
-    inp.addEventListener('change', () => { state.mealPlan[inp.dataset.plan] = inp.value; persist(); }));
-}
-
 /* ==================== 일정 ==================== */
 
 function renderScheduleView() {
@@ -470,26 +449,6 @@ function renderScheduleView() {
     state.events = state.events.filter(e => e.id !== b.dataset.del);
     persist(); renderScheduleView();
   }));
-}
-
-/* ==================== 건강 ==================== */
-
-function renderHealthView() {
-  const dk = todayKey();
-  $('#health-date-badge').textContent = `${new Date().getMonth() + 1}월 ${new Date().getDate()}일`;
-  const h = state.health[dk] || {};
-  $('#med-morning').classList.toggle('taken', !!h.morning);
-  $('#med-evening').classList.toggle('taken', !!h.evening);
-  $('#health-water').value = h.water || '';
-  $('#health-sleep').value = h.sleep || '';
-  $('#health-hospital').value = h.hospital || '';
-}
-
-function healthField(key, value) {
-  const dk = todayKey();
-  state.health[dk] = state.health[dk] || {};
-  state.health[dk][key] = value;
-  persist();
 }
 
 /* ==================== 칭찬: 오늘 할 일 ==================== */
@@ -947,9 +906,7 @@ async function fetchWeather() {
 function renderAll() {
   renderHome();
   renderRoutineView();
-  renderMealView();
   renderScheduleView();
-  renderHealthView();
   renderTodoView();
   renderStudyView();
   renderCookieView();
@@ -998,15 +955,6 @@ function bindEvents() {
   });
   $('#routine-input').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-routine-add').click(); });
 
-  // 식사
-  ['breakfast', 'lunch', 'dinner'].forEach(k =>
-    $(`#meal-${k}`).addEventListener('change', e => {
-      const dk = todayKey();
-      state.meals[dk] = state.meals[dk] || {};
-      state.meals[dk][k] = e.target.value;
-      persist();
-    }));
-
   // 일정
   $('#btn-event-add').addEventListener('click', () => {
     const date = $('#event-date').value;
@@ -1018,22 +966,6 @@ function bindEvents() {
     toast('일정 추가! 🎈');
   });
   $('#event-title').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-event-add').click(); });
-
-  // 건강
-  $('#med-morning').addEventListener('click', () => {
-    const dk = todayKey();
-    state.health[dk] = state.health[dk] || {};
-    state.health[dk].morning = !state.health[dk].morning;
-    persist(); renderHealthView();
-  });
-  $('#med-evening').addEventListener('click', () => {
-    const dk = todayKey();
-    state.health[dk] = state.health[dk] || {};
-    state.health[dk].evening = !state.health[dk].evening;
-    persist(); renderHealthView();
-  });
-  [['water', '#health-water'], ['sleep', '#health-sleep'], ['hospital', '#health-hospital']].forEach(([k, sel]) =>
-    $(sel).addEventListener('change', e => healthField(k, e.target.value)));
 
   // 칭찬
   $('#btn-todo-add').addEventListener('click', () => {

@@ -55,13 +55,23 @@ body::before {
   z-index: 0;
 }
 
+/* 상태바(노치·다이나믹 아일랜드) 영역을 배경색으로 덮어 글자가 시계와 겹치지 않게 */
+body::after {
+  content: "";
+  position: fixed; top: 0; left: 0; right: 0;
+  height: env(safe-area-inset-top, 0px);
+  background: var(--bg);
+  pointer-events: none;
+  z-index: 60;
+}
+
 #app {
   position: relative;
   z-index: 1;
   max-width: 480px;
   margin: 0 auto;
   min-height: 100dvh;
-  padding: 0 16px calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
+  padding: env(safe-area-inset-top, 0px) 16px calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
 }
 
 /* ---------------- views ---------------- */
@@ -74,7 +84,7 @@ body::before {
 .view-sub { color: var(--ink-soft); font-size: .9rem; margin-top: 2px; }
 
 /* ---------------- home header ---------------- */
-.home-header { padding: 8px 2px 4px; }
+.home-header { padding: 10px 2px 4px; }
 .home-header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
 .app-title { font-size: 1.55rem; color: var(--ink-strong); letter-spacing: -0.02em; }
 .app-title em { font-style: normal; color: var(--pink); }
@@ -275,23 +285,6 @@ body::before {
 }
 .preset-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 
-/* ---------------- meals ---------------- */
-.meal-item { margin-top: 12px; }
-.meal-label { font-weight: 800; color: var(--ink-strong); margin-bottom: 6px; }
-.meal-item textarea {
-  width: 100%; border: 2px solid #eee3cf; border-radius: 16px; background: #fffdf6;
-  padding: 12px 14px; font-family: inherit; font-size: .95rem; color: var(--ink-strong); resize: none;
-}
-.meal-item textarea:focus { outline: none; border-color: var(--yellow); }
-.planner-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1.5px dashed #eee3cf; }
-.planner-row:last-child { border-bottom: none; }
-.planner-day { width: 84px; font-weight: 800; color: var(--ink-strong); font-size: .88rem; flex-shrink: 0; }
-.planner-row input {
-  flex: 1; min-width: 0; border: 2px solid #eee3cf; border-radius: 12px;
-  padding: 9px 12px; font-family: inherit; font-size: .9rem; background: #fffdf6; color: var(--ink-strong);
-}
-.planner-row input:focus { outline: none; border-color: var(--yellow); }
-
 /* ---------------- events ---------------- */
 .event-item {
   display: flex; align-items: center; gap: 12px; padding: 12px 2px;
@@ -305,23 +298,6 @@ body::before {
 .event-date-chip .d { font-size: 1.05rem; }
 .event-text { flex: 1; font-weight: 600; color: var(--ink-strong); overflow-wrap: anywhere; }
 .empty-note { color: var(--ink-soft); font-size: .88rem; padding: 14px 0; text-align: center; }
-
-/* ---------------- health ---------------- */
-.med-row { display: flex; gap: 12px; margin-top: 8px; }
-.med-toggle {
-  flex: 1; border: 2px solid #eee3cf; background: #fffdf6; border-radius: 16px;
-  padding: 16px; font-size: 1rem; font-weight: 800; color: var(--ink-strong); cursor: pointer; font-family: inherit;
-  transition: all .15s ease;
-}
-.med-toggle.taken { background: var(--green-btn); border-color: var(--mint); color: var(--green-ink); }
-.med-toggle.taken::after { content: " ✓"; }
-.health-item { margin-top: 12px; }
-.health-item label { display: block; font-weight: 700; color: var(--ink-strong); margin-bottom: 6px; font-size: .92rem; }
-.health-item input {
-  width: 100%; border: 2px solid #eee3cf; border-radius: 14px; background: #fffdf6;
-  padding: 12px 14px; font-family: inherit; font-size: .95rem; color: var(--ink-strong);
-}
-.health-item input:focus { outline: none; border-color: var(--yellow); }
 
 /* ---------------- cookie bank ---------------- */
 .cookie-bank-card { background: linear-gradient(150deg, #fdf3d8, #fdeef1); }
@@ -408,9 +384,10 @@ body::before {
 .nav-btn {
   border: none; background: transparent; cursor: pointer; font-family: inherit;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  font-size: .68rem; font-weight: 700; color: var(--ink-soft); flex: 1; padding: 2px 0;
+  font-size: .7rem; font-weight: 700; color: var(--ink-soft); flex: 1 1 0; min-width: 0; padding: 2px 0;
+  white-space: nowrap;
 }
-.nav-btn span { font-size: 1.25rem; filter: grayscale(.55); opacity: .7; transition: all .15s ease; }
+.nav-btn span { font-size: 1.3rem; line-height: 1.15; filter: grayscale(.55); opacity: .7; transition: all .15s ease; }
 .nav-btn.active { color: var(--ink-strong); }
 .nav-btn.active span { filter: none; opacity: 1; transform: translateY(-2px); }
 

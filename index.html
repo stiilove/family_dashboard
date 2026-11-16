@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#fdf6e3">
 <meta name="robots" content="noindex, nofollow">
 <title>우리 가족 기록장</title>
 <link rel="stylesheet" href="styles.css">
@@ -31,7 +32,7 @@
     <div class="card weather-card" id="weather-card">
       <div class="weather-main">
         <span class="weather-icon" id="weather-icon">🌞</span>
-        <span class="weather-loc">시흥</span>
+        <span class="weather-loc" id="weather-loc">시흥</span>
         <strong class="weather-temp" id="weather-temp">--°</strong>
         <span class="weather-sky" id="weather-sky">맑음</span>
         <span class="weather-minmax" id="weather-minmax">최저 --° · 최고 --°</span>
@@ -97,34 +98,6 @@
     </div>
   </section>
 
-  <!-- ==================== 식사 ==================== -->
-  <section class="view" id="view-meal">
-    <header class="view-header">
-      <h1>🍚 식사 기록</h1>
-      <p class="view-sub">오늘 우리 가족 밥상</p>
-    </header>
-    <div class="card">
-      <div class="card-head"><h2>📅 오늘의 식단</h2><span class="badge" id="meal-date-badge"></span></div>
-      <div class="meal-item" data-meal="breakfast">
-        <div class="meal-label">🌅 아침</div>
-        <textarea id="meal-breakfast" rows="2" placeholder="아침 메뉴를 적어요"></textarea>
-      </div>
-      <div class="meal-item" data-meal="lunch">
-        <div class="meal-label">☀️ 점심</div>
-        <textarea id="meal-lunch" rows="2" placeholder="점심 메뉴를 적어요"></textarea>
-      </div>
-      <div class="meal-item" data-meal="dinner">
-        <div class="meal-label">🌙 저녁</div>
-        <textarea id="meal-dinner" rows="2" placeholder="저녁 메뉴를 적어요"></textarea>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><h2>📝 일주일 식단 플랜</h2></div>
-      <div id="meal-planner"></div>
-      <p class="hint">메뉴를 미리 정해두면 장보기도 편해요.</p>
-    </div>
-  </section>
-
   <!-- ==================== 일정 ==================== -->
   <section class="view" id="view-schedule">
     <header class="view-header">
@@ -142,36 +115,6 @@
     <div class="card">
       <div class="card-head"><h2>🎈 다가오는 일정</h2></div>
       <div id="event-list"></div>
-    </div>
-  </section>
-
-  <!-- ==================== 건강 ==================== -->
-  <section class="view" id="view-health">
-    <header class="view-header">
-      <h1>💊 건강 기록</h1>
-      <p class="view-sub">아프지 말고 건강하게!</p>
-    </header>
-    <div class="card">
-      <div class="card-head"><h2>💉 약 챙기기</h2><span class="badge" id="health-date-badge"></span></div>
-      <div class="med-row">
-        <button class="med-toggle" id="med-morning">🌅 아침약</button>
-        <button class="med-toggle" id="med-evening">🌙 저녁약</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><h2>💧 오늘의 건강 노트</h2></div>
-      <div class="health-item">
-        <label for="health-water">💧 물 마시기</label>
-        <input type="text" id="health-water" placeholder="예: 하루 5잔">
-      </div>
-      <div class="health-item">
-        <label for="health-sleep">😴 수면</label>
-        <input type="text" id="health-sleep" placeholder="예: 10시에 잠듦">
-      </div>
-      <div class="health-item">
-        <label for="health-hospital">🏥 병원/특이사항</label>
-        <input type="text" id="health-hospital" placeholder="예: 시아 치과 예약">
-      </div>
     </div>
   </section>
 
@@ -298,9 +241,7 @@
   <nav class="bottom-nav" id="bottom-nav">
     <button class="nav-btn active" data-view="home"><span>🐹</span>홈</button>
     <button class="nav-btn" data-view="routine"><span>🐾</span>루틴</button>
-    <button class="nav-btn" data-view="meal"><span>🍚</span>식사</button>
     <button class="nav-btn" data-view="schedule"><span>📅</span>일정</button>
-    <button class="nav-btn" data-view="health"><span>💊</span>건강</button>
     <button class="nav-btn" data-view="praise"><span>🌟</span>칭찬</button>
     <button class="nav-btn" data-view="cookie"><span>🍪</span>쿠키</button>
     <button class="nav-btn" data-view="chat"><span>💬</span>채팅</button>
