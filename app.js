@@ -43,24 +43,44 @@ class FirebaseStore {
     return text === 'null' ? null : JSON.parse(text);
   }
   async save(data) {
-    await fetch(this.url + this.authQ(), {
+    const res = await fetch(this.url + this.authQ(), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
+    if (!res.ok) throw new Error('firebase save ' + res.status);
+    return true;
   }
   subscribe(cb) {
     if (this.es) this.es.close();
     this.es = new EventSource(this.url + this.authQ());
-    this.es.onmessage = (e) => {
-      if (!e.data || e.data === 'null') return;
-      try { cb(JSON.parse(e.data)); } catch (err) { /* ignore */ }
+    /* Firebase REST 스트리밍은 event: put / event: patch 처럼
+       '이름 붙은' 이벤트로 보내요. onmessage는 이름 없는 이벤트만 받기 때문에
+       put/patch를 직접 구독해야 다른 폰의 변경이 바로 들어와요.
+       data 모양: {"path":"/cookies/eunji","data":...} */
+    const handle = (kind) => (e) => {
+      if (!e.data) return;
+      let msg;
+      try { msg = JSON.parse(e.data); } catch (err) { return; }
+      if (msg && typeof msg === 'object' && Object.prototype.hasOwnProperty.call(msg, 'path')) {
+        if (msg.data === null || msg.data === undefined) return; // 삭제 이벤트는 쓰지 않아요
+        cb(msg.data, msg.path, kind);
+      } else if (msg) {
+        cb(msg, '/', kind);
+      }
     };
+    this.es.addEventListener('put', handle('put'));
+    this.es.addEventListener('patch', handle('patch'));
+    this.es.onmessage = handle('put'); // 이름 없는 이벤트 대비
     this.es.onerror = () => { /* EventSource는 자동 재접속 */ };
   }
 }
 
 const STORAGE_KEY = 'family-dashboard-v1';
+
+/* 우리 가족 Firebase Realtime Database (asia-southeast1)
+   여기 주소만 있으면 가족 폰들이 각자 자동으로 같은 기록장에 붙어요. */
+const DEFAULT_FIREBASE_CONFIG = '{"databaseURL":"https://family-dashboard-34895-default-rtdb.asia-southeast1.firebasedatabase.app"}';
 
 let store = new LocalStore(STORAGE_KEY);
 
@@ -127,7 +147,7 @@ const DEFAULT_STATE = {
   chat: { messages: [] }, // {id, memberId, text, sticker, ts, reactions:{memberId:true}}
   settings: {
     cookieGoal: 50, exchangeWon: 5000, todoCookie: 1, studyCookie: 1,
-    firebase: { config: '', enabled: false },
+    firebase: { config: DEFAULT_FIREBASE_CONFIG, enabled: true },
   },
 };
 
@@ -148,42 +168,93 @@ function deepMerge(base, extra) {
 
 async function initStore() {
   const saved = await store.load();
-  state = deepMerge(JSON.parse(JSON.stringify(DEFAULT_STATE)), saved || {});
+  state = normalizeState(deepMerge(JSON.parse(JSON.stringify(DEFAULT_STATE)), saved || {}));
+  applyFirebaseDefaults(saved);
+}
+
+/* 예전에 저장된 기록(firebase.config가 비어 있던 시절)도,
+   새 폰처럼 저장된 게 아무것도 없는 경우도 모두 기본 Firebase로 자동 연결되게 해요.
+   (localStorage에 enabled:false / config:'' 가 남아 있어도 덮어써요) */
+function applyFirebaseDefaults(saved) {
+  const savedFb = (saved && saved.settings && saved.settings.firebase) || null;
+  const savedConfig = savedFb && typeof savedFb.config === 'string' ? savedFb.config.trim() : '';
+  if (savedConfig) return; // 누군가 직접 넣은 설정은 그대로 존중
+  state.settings.firebase = { config: DEFAULT_FIREBASE_CONFIG, enabled: true };
+}
+
+/* Firebase는 빈 배열을 지우고, 배열을 숫자 키 객체로 돌려줄 때가 있어요.
+   화면 그리는 코드가 .sort()/.map()을 쓰니 배열 모양을 미리 맞춰둬요. */
+const ARRAY_FIELDS = ['events', 'cookieLog', 'exchanges', 'studyFixed'];
+function asArray(v) {
+  if (Array.isArray(v)) return v;
+  if (v && typeof v === 'object') return Object.values(v).filter(x => x !== null && x !== undefined);
+  return [];
+}
+function normalizeState(s) {
+  for (const key of ARRAY_FIELDS) {
+    if (s[key] === undefined || s[key] === null) s[key] = [];
+    else s[key] = asArray(s[key]);
+  }
+  if (!s.chat || typeof s.chat !== 'object') s.chat = { messages: [] };
+  s.chat.messages = asArray(s.chat.messages);
+  for (const nk of ['routines', 'todos', 'studyCustom']) {
+    const m = s[nk];
+    if (!m || typeof m !== 'object') continue;
+    for (const mid of Object.keys(m)) m[mid] = asArray(m[mid]);
+  }
+  return s;
 }
 
 function persist() {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => store.save(state), 250);
+  saveTimer = setTimeout(() => {
+    Promise.resolve(store.save(state)).catch(e => {
+      console.error('save fail', e);
+      updateSyncStatus('저장 실패: ' + e.message);
+    });
+  }, 250);
 }
 
 function connectFirebase() {
   const fb = state.settings.firebase || {};
+  const cfgText = (fb.config || '').trim();
+  const cfgEnabled = !!fb.enabled;
   remoteSync = false;
-  if (!fb.enabled || !fb.config) { updateSyncStatus(); return; }
+  if (!cfgEnabled || !cfgText) {
+    store = new LocalStore(STORAGE_KEY); // 동기화 끔 → 이 기기 저장소로
+    updateSyncStatus();
+    return;
+  }
   try {
-    const cfg = JSON.parse(fb.config);
+    const cfg = JSON.parse(cfgText);
     if (!cfg.databaseURL) throw new Error('databaseURL 없음');
     store = new FirebaseStore(cfg);
     remoteSync = true;
-    // 원격 데이터로 병합 후 업로드
+    // 원격 데이터로 병합 후 업로드 (처음 연결되는 폰이면 이 기기 기록이 그대로 올라가요)
     store.load().then(remote => {
-      state = deepMerge(state, remote || {});
+      state = normalizeState(deepMerge(state, remote || {}));
+      // 원격에 옛날 빈 설정이 남아 있어도 지금 연결 설정을 유지해요
+      state.settings.firebase = { ...(state.settings.firebase || {}), config: cfgText, enabled: cfgEnabled };
       return store.save(state);
     }).then(() => {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
       renderAll();
       updateSyncStatus('연결됨 ✅ 실시간 동기화 중');
+      startSubscribe(); // 첫 업로드가 끝난 뒤에 구독을 열어요 (이 기기 기록이 지워지지 않게)
     }).catch(e => {
       console.error(e);
       remoteSync = false;
       store = new LocalStore(STORAGE_KEY);
       updateSyncStatus('연결 실패: ' + e.message);
     });
-    store.subscribe(data => {
-      if (!data) return;
-      state = deepMerge(JSON.parse(JSON.stringify(DEFAULT_STATE)), data);
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
-      renderAll();
-    });
+    function startSubscribe() {
+      store.subscribe((data, path, kind) => {
+        if (!data) return;
+        applyRemote(data, path, kind);
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+        renderAll();
+      });
+    }
   } catch (e) {
     remoteSync = false;
     updateSyncStatus('설정 오류: ' + e.message);
@@ -191,11 +262,41 @@ function connectFirebase() {
   updateSyncStatus('연결하는 중…');
 }
 
+/* 다른 폰에서 저장한 내용을 이 기기 state에 반영해요.
+   put  : 그 경로를 통째로 바꿔요 (보통 '/' 전체)
+   patch: 바뀐 항목만 섞어 넣어요 */
+function applyRemote(data, path, kind) {
+  const parts = String(path || '/').split('/').filter(Boolean);
+  if (!parts.length) {
+    state = normalizeState(deepMerge(JSON.parse(JSON.stringify(DEFAULT_STATE)), data || {}));
+    return;
+  }
+  let node = state;
+  for (let i = 0; i < parts.length - 1; i++) {
+    const k = parts[i];
+    if (!node[k] || typeof node[k] !== 'object') node[k] = {};
+    node = node[k];
+  }
+  const last = parts[parts.length - 1];
+  const isPlain = (v) => v && typeof v === 'object' && !Array.isArray(v);
+  if (kind === 'patch' && isPlain(data) && isPlain(node[last])) {
+    node[last] = deepMerge(node[last], data);
+  } else {
+    node[last] = data;
+  }
+  normalizeState(state);
+}
+
 function updateSyncStatus(msg) {
   const el = document.getElementById('sync-status');
-  if (!el) return;
-  if (msg) { el.textContent = msg; return; }
-  el.textContent = remoteSync ? '연결됨 ✅ 실시간 동기화 중' : '로컬 저장소만 사용 중 (이 기기에만 저장)';
+  const badge = document.getElementById('sync-badge');
+  const text = msg || (remoteSync ? '연결됨 ✅ 실시간 동기화 중' : '로컬 저장소만 사용 중 (이 기기에만 저장)');
+  if (el) el.textContent = text;
+  if (badge) {
+    badge.textContent = msg ? text : (remoteSync ? '☁️ 실시간 동기화 중' : '📴 이 기기에만 저장');
+    badge.classList.toggle('chip-yellow', !remoteSync);
+    badge.classList.toggle('chip-white', remoteSync);
+  }
 }
 
 /* ==================== 유틸 ==================== */
@@ -840,14 +941,17 @@ function saveSettings() {
   state.settings.exchangeWon = Math.max(100, Number($('#set-exchange-won').value) || 5000);
   state.settings.todoCookie = Math.max(1, Number($('#set-todo-cookie').value) || 1);
   state.settings.studyCookie = Math.max(1, Number($('#set-study-cookie').value) || 1);
-  state.settings.firebase.config = $('#set-firebase-config').value.trim();
+  const newConfig = $('#set-firebase-config').value.trim();
+  const configChanged = newConfig !== state.settings.firebase.config;
+  state.settings.firebase.config = newConfig;
   const wasEnabled = state.settings.firebase.enabled;
   state.settings.firebase.enabled = $('#set-firebase-enabled').checked;
   persist();
   closeModal('modal-settings');
   toast('저장했어요 ✅');
   renderAll();
-  if (!wasEnabled && state.settings.firebase.enabled) connectFirebase();
+  if (state.settings.firebase.enabled && (!wasEnabled || configChanged)) connectFirebase();
+  else updateSyncStatus();
 }
 
 function resetData() {
