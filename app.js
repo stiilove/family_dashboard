@@ -74,6 +74,14 @@ const MEMBERS = [
 ];
 const memberById = (id) => MEMBERS.find(m => m.id === id) || MEMBERS[0];
 
+// 가족 카드에 한 줄로 보여줄 포근한 문구
+const MEMBER_MOTTOS = {
+  eunji: '오늘도 반짝반짝',
+  jinu: '우리집 든든이',
+  sia: '씩씩한 하루',
+  sieun: '몽글몽글 하루',
+};
+
 const MISSIONS = [
   { emoji: '🥕', text: '저녁 준비 같이 돕기' },
   { emoji: '🧹', text: '방구석 청소 한 번씩' },
@@ -92,7 +100,8 @@ const STICKERS = ['❤️', '🐰', '🐹', '🐻', '🌟', '🎉', '👍', '�
 const DEFAULT_STATE = {
   cookies: { eunji: 0, jinu: 0, sia: 0, sieun: 0 },
   money: { eunji: 0, jinu: 0, sia: 0, sieun: 0 },
-  cookieLog: [],     // {date, memberId, text, amount, ts}
+  cookieLog: [],     // {date, memberId, text, amount, ts, ref?}
+  cookieAwards: {},  // "YYYY-MM-DD|ref" -> {memberId, amount}  하루 한 번만 적립되게 하는 장부
   exchanges: [],     // {date, memberId, cookies, won, ts}
   routines: {        // memberId -> [{id, text}]
     eunji: [], jinu: [],
@@ -219,11 +228,39 @@ function avatarImg(m, cls = 'avatar') {
 
 /* ==================== 쿠키 적립 ==================== */
 
-function awardCookie(memberId, amount, text) {
-  if (!amount) return;
+/* ref(항목 표시)를 주면 같은 날 같은 항목으로는 딱 한 번만 적립돼요.
+   체크 → 해제 → 다시 체크를 반복해도 쿠키가 불어나지 않아요. */
+function awardCookie(memberId, amount, text, ref) {
+  if (!amount) return false;
+  const key = ref ? `${todayKey()}|${ref}` : null;
+  if (key) {
+    state.cookieAwards = state.cookieAwards || {};
+    if (state.cookieAwards[key]) return false; // 이미 받은 쿠키
+    // 지난 날 장부는 쌓아두지 않아요
+    for (const k of Object.keys(state.cookieAwards)) {
+      if (!k.startsWith(todayKey() + '|')) delete state.cookieAwards[k];
+    }
+    state.cookieAwards[key] = { memberId, amount };
+  }
   state.cookies[memberId] = (state.cookies[memberId] || 0) + amount;
-  state.cookieLog.unshift({ date: todayKey(), memberId, text, amount, ts: Date.now() });
+  const entry = { date: todayKey(), memberId, text, amount, ts: Date.now() };
+  if (ref) entry.ref = ref;
+  state.cookieLog.unshift(entry);
   state.cookieLog = state.cookieLog.slice(0, 300);
+  return true;
+}
+
+/* 체크 해제 시 그 항목으로 받은 오늘 쿠키를 돌려놔요 (교환으로 모자라도 마이너스는 안 돼요) */
+function revokeCookie(ref) {
+  const key = `${todayKey()}|${ref}`;
+  const rec = state.cookieAwards && state.cookieAwards[key];
+  if (!rec) return false;
+  delete state.cookieAwards[key];
+  const have = state.cookies[rec.memberId] || 0;
+  state.cookies[rec.memberId] = Math.max(0, have - rec.amount);
+  const idx = state.cookieLog.findIndex(l => l.ref === ref && l.date === todayKey());
+  if (idx >= 0) state.cookieLog.splice(idx, 1);
+  return true;
 }
 
 function exchangeCookies(memberId) {
@@ -256,7 +293,7 @@ function renderHome() {
       ${avatarImg(m)}
       <div class="member-info">
         <div class="member-name">${m.name}</div>
-        <div class="member-sub">${m.role ? m.name === '은지' ? '우사기와 함께' : m.name === '진우' ? '하치와레와 함께' : '치이카와와 함께' : ''}</div>
+        <div class="member-sub">${MEMBER_MOTTOS[m.id] || '우리집 도장'}</div>
       </div>
       <div class="member-cookies">
         <div><span class="cookie-star">⭐</span><strong>${c}</strong></div>
@@ -322,7 +359,7 @@ function renderRoutineView() {
     else continue;
   }
   $('#stamp-streak').textContent = `🔥 ${streak}일 연속`;
-  $('#stamp-desc').textContent = `${m.name}가 그날 공부나 루틴을 하나라도 마치면 치이카와 도장이 찍혀요`;
+  $('#stamp-desc').textContent = `${m.name}의 하루에 공부나 루틴을 하나라도 마치면 도장이 찍혀요`;
 
   // 이번 주 월~일
   const monday = new Date(today);
@@ -360,11 +397,14 @@ function renderRoutineView() {
     state.routineDone[currentRoutineMember] = state.routineDone[currentRoutineMember] || {};
     const map = state.routineDone[currentRoutineMember];
     map[dk] = map[dk] || {};
-    if (map[dk][id]) { delete map[dk][id]; }
-    else {
+    const ref = `routine:${currentRoutineMember}:${id}`;
+    if (map[dk][id]) {
+      delete map[dk][id];
+      if (revokeCookie(ref)) toast('쿠키 -1 🍪');
+    } else {
       map[dk][id] = true;
-      awardCookie(currentRoutineMember, 1, '루틴: ' + (state.routines[currentRoutineMember].find(r => r.id === id) || {}).text);
-      toast('쿠키 +1 🍪');
+      const t = (state.routines[currentRoutineMember].find(r => r.id === id) || {}).text;
+      toast(awardCookie(currentRoutineMember, 1, '루틴: ' + t, ref) ? '쿠키 +1 🍪' : '쿠키는 하루 한 번만 적립돼요 🍪');
     }
     persist(); renderRoutineView(); renderHome();
   }));
@@ -499,11 +539,17 @@ function renderTodoView() {
     state.todoDone[member] = state.todoDone[member] || {};
     state.todoDone[member][dk] = state.todoDone[member][dk] || {};
     const map = state.todoDone[member][dk];
-    if (map[id]) { delete map[id]; awardCookieRollback(member, id); }
-    else {
+    const ref = `todo:${member}:${id}`;
+    if (map[id]) {
+      delete map[id];
+      if (revokeCookie(ref)) toast('쿠키 -' + (Number(state.settings.todoCookie) || 1) + ' 🍪');
+    } else {
       map[id] = true;
-      awardCookie(member, Number(state.settings.todoCookie) || 1, '할 일: ' + ((state.todos[member] || []).find(t => t.id === id) || {}).text);
-      toast('쿠키 +' + state.settings.todoCookie + ' 🍪');
+      const amount = Number(state.settings.todoCookie) || 1;
+      const t = (state.todos[member] || []).find(x => x.id === id) || {};
+      toast(awardCookie(member, amount, '할 일: ' + t.text, ref)
+        ? '쿠키 +' + amount + ' 🍪'
+        : '쿠키는 하루 한 번만 적립돼요 🍪');
     }
     persist(); renderTodoView(); renderHome();
   }));
@@ -532,11 +578,6 @@ function addTodo(memberId) {
   state.todos[memberId] = state.todos[memberId] || [];
   state.todos[memberId].push({ id: uid(), text: inp.value.trim() });
   persist(); renderTodoView();
-}
-
-function awardCookieRollback(memberId, todoId) { // 체크 해제 시 오늘 해당 쿠키 회수
-  const log = state.cookieLog.find(l => l.memberId === memberId && l.date === todayKey() && l.text.startsWith('할 일:'));
-  // 단순화: 체크 해제는 쿠키를 회수하지 않음(기록은 하루 1회만 적립됨)
 }
 
 /* ==================== 공부 플랜 ==================== */
@@ -572,11 +613,16 @@ function renderStudyView() {
     const map = state.studyDone[currentStudyMember][dk];
     const key = b.dataset.key;
     const item = items.find(i => i.key === key);
-    if (map[key]) { delete map[key]; }
-    else {
+    const ref = `study:${currentStudyMember}:${key}`;
+    const amount = item ? item.cookies : 1;
+    if (map[key]) {
+      delete map[key];
+      if (revokeCookie(ref)) toast(`쿠키 -${amount} 🍪`);
+    } else {
       map[key] = true;
-      awardCookie(currentStudyMember, item ? item.cookies : 1, '공부: ' + (item ? item.text : ''));
-      toast(`쿠키 +${item ? item.cookies : 1} 🍪`);
+      toast(awardCookie(currentStudyMember, amount, '공부: ' + (item ? item.text : ''), ref)
+        ? `쿠키 +${amount} 🍪`
+        : '쿠키는 하루 한 번만 적립돼요 🍪');
     }
     persist(); renderStudyView(); renderHome();
   }));
