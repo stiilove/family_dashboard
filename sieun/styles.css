@@ -449,7 +449,7 @@ body::before {
 /* ==================== quests ==================== */
 
 .quests {
-  padding-top: 16px;
+  padding-top: clamp(18px, 2.4vh, 24px);
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(12px, 1.6vw, 22px);
