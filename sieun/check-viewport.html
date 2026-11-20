@@ -40,7 +40,8 @@
     out.push('stage h=' + Math.round(stage.getBoundingClientRect().height));
     var quests = d.querySelectorAll('.quest');
     out.push('quests=' + quests.length + ' card=' + Math.round(quests[0].getBoundingClientRect().width) + 'x' + Math.round(quests[0].getBoundingClientRect().height));
-    out.push('clock=' + d.querySelector('#time-text').textContent + ' / ' + d.querySelector('#ampm').textContent);
+    var tt = d.querySelector('#time-text');
+    out.push('clock=' + (tt ? tt.textContent + ' / ' + d.querySelector('#ampm').textContent : 'MISSING'));
     out.push('mins=' + d.querySelector('#mins').textContent);
     out.push('week cells=' + d.querySelectorAll('.wday').length + ' caption=' + d.querySelector('#week-caption').textContent);
     out.push('weather cells=' + d.querySelectorAll('.wc').length + ' tip=' + d.querySelector('#tip').textContent);
@@ -61,7 +62,9 @@
     if (e.data && e.data.t === 'err') { errs.push(e.data.m); }
   });
 
-  fetch(BASE).then(function (r) { return r.text(); }).then(function (html) {
+  var V = '?v=' + Date.now();
+  fetch(BASE + V).then(function (r) { return r.text(); }).then(function (html) {
+    html = html.replace('href="styles.css"', 'href="styles.css' + V + '"').replace('src="app.js"', 'src="app.js' + V + '"');
     var inject = '<base href="' + BASE + '"><script>' +
       'window.addEventListener("error",function(e){parent.postMessage({t:"err",m:(e.message||"")+" | "+(e.filename||"")+":"+(e.lineno||"")},"*")});' +
       'window.addEventListener("unhandledrejection",function(e){parent.postMessage({t:"err",m:"unhandled "+e.reason},"*")});' +
