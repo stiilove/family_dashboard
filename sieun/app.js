@@ -613,12 +613,12 @@
         c.style.left = (6 + Math.random() * 88) + '%';
         c.style.background = colors[i % colors.length];
         c.style.animationDelay = (Math.random() * 0.9) + 's';
-        c.style.animationDuration = (2.4 + Math.random() * 1.6) + 's';
+        c.style.animationDuration = (3.2 + Math.random() * 1.8) + 's';
         c.style.setProperty('--drift', (Math.random() * 60 - 30) + 'px');
         c.style.width = (6 + Math.random() * 6) + 'px';
         c.style.height = (8 + Math.random() * 8) + 'px';
         host.appendChild(c);
-        setTimeout(function () { c.remove(); }, 5200);
+        setTimeout(function () { c.remove(); }, 8600);
       })(i);
     }
   }
@@ -630,7 +630,7 @@
     $('#cheer-sub').innerHTML = preview
       ? '시은이가 일주일을 완주하면<br>이렇게 축하해 줄게요!'
       : '5일 내내 양치·세수·옷 갈아입기를<br>모두 해냈어. 정말 대단해!';
-    confetti($('.cheer'), 26);
+    confetti($('.cheer'), 30);
     sfxFanfare();
     if (!preview) {
       var w = weekInfo();
