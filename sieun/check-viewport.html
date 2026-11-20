@@ -65,7 +65,8 @@
     out.push('done cards=' + d.querySelectorAll('.quest.done').length + ' next=' + (d.querySelector('.quest.next') ? d.querySelector('.quest.next').dataset.id : '-'));
     out.push('week=' + Array.prototype.map.call(d.querySelectorAll('.wday'), function (x) { return x.className.replace('wday ', '') + ':' + x.textContent; }).join(' | '));
     out.push('caption=' + d.querySelector('#week-caption').textContent);
-    out.push('treasure open=' + !d.querySelector('#treasure-overlay').hidden + ' reward=' + !d.querySelector('#reward').hidden);
+    var cheer = d.querySelector('#cheer-overlay');
+    out.push('cheer open=' + (cheer ? !cheer.hidden : 'n/a') + ' confetti=' + d.querySelectorAll('.confetti').length);
     out.push('imgs=' + Array.prototype.map.call(d.images, function (im) { return (im.getAttribute('src') || '').split('/').pop() + ':' + im.naturalWidth; }).join(','));
     var bad = w.performance.getEntriesByType('resource').filter(function (r) { return r.responseStatus >= 400; });
     out.push('badRes=' + (bad.length ? bad.map(function (b) { return b.name.split('/').pop(); }).join(' ') : 'none'));
