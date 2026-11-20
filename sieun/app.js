@@ -613,12 +613,12 @@
         c.style.left = (6 + Math.random() * 88) + '%';
         c.style.background = colors[i % colors.length];
         c.style.animationDelay = (Math.random() * 0.9) + 's';
-        c.style.animationDuration = (1.6 + Math.random() * 1.2) + 's';
+        c.style.animationDuration = (2.4 + Math.random() * 1.6) + 's';
         c.style.setProperty('--drift', (Math.random() * 60 - 30) + 'px');
         c.style.width = (6 + Math.random() * 6) + 'px';
         c.style.height = (8 + Math.random() * 8) + 'px';
         host.appendChild(c);
-        setTimeout(function () { c.remove(); }, 3600);
+        setTimeout(function () { c.remove(); }, 5200);
       })(i);
     }
   }

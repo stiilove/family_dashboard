@@ -51,6 +51,9 @@
   function measure() {
     var d = f.contentDocument, w = f.contentWindow;
     if (!d) { show('no doc'); return; }
+    try { measureInner(d, w); } catch (err) { show('measure error: ' + err.message + '\n' + 'errors=' + (errs.length ? errs.join(' / ') : 'none')); }
+  }
+  function measureInner(d, w) {
     var out = [];
     var qs = d.querySelectorAll('.quest');
     out.push('docH=' + d.documentElement.scrollHeight + ' (clientH=' + d.documentElement.clientHeight + ')');
