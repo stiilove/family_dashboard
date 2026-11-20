@@ -511,12 +511,13 @@ body::before {
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  border-radius: clamp(14px, 2.2vh, 22px);
   filter: drop-shadow(0 10px 16px rgba(122, 96, 70, .12));
   transition: filter .35s ease, transform .35s ease, opacity .35s ease;
   pointer-events: none;
 }
-.quest.done .q-img { filter: grayscale(.5) opacity(.45); transform: scale(.95); }
+.quest.done .q-img { filter: grayscale(.28) opacity(.62); transform: none; }
 
 .q-title {
   margin-top: clamp(4px, .8vh, 10px);
