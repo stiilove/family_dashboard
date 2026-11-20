@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<title>viewport check (임시)</title>
+<style>
+  html, body { margin: 0; background: #1d1d1f; }
+  iframe { display: block; border: 0; background: #fff; }
+</style>
+</head>
+<body>
+<iframe id="f" src="https://stiilove.github.io/family_dashboard/sieun/" width="1024" height="768"></iframe>
+<script>
+  var q = new URLSearchParams(location.search);
+  var f = document.getElementById('f');
+  var W = parseInt(q.get('w') || '1024', 10), H = parseInt(q.get('h') || '768', 10);
+  f.width = W; f.height = H; f.style.width = W + 'px'; f.style.height = H + 'px';
+  var fix = q.get('fix');
+  if (fix) { f.src = 'https://stiilove.github.io/family_dashboard/sieun/?v=' + encodeURIComponent(fix); }
+</script>
+</body>
+</html>
