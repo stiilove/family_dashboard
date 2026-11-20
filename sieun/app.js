@@ -2,7 +2,7 @@
    시은이 아침 퀘스트
    - localStorage + Firebase RTDB 동기화 (/sieunMorning.json)
    - Open-Meteo 날씨·미세먼지 (시흥 기준)
-   - Web Audio 효과음 / 토요일 보물상자
+   - Web Audio 효과음 / 일주일 완주 축하
    ============================================================ */
 (function () {
   'use strict';
@@ -21,13 +21,6 @@
     { id: 'dress', num: 3, title: '옷 갈아입기', img: 'assets/quest-dress.jpg' }
   ];
 
-  var REWARDS = [
-    { id: 'game30', emoji: '🎮', label: '게임 30분 이용권' },
-    { id: 'doll',   emoji: '🧸', label: '인형뽑기권' },
-    { id: 'kiss',   emoji: '💋', label: '뽀뽀상품권' },
-    { id: 'hangul', emoji: '📺', label: '한글티비 30분 이용권' }
-  ];
-
   var WEEKDAY = ['일', '월', '화', '수', '목', '금', '토'];
   var WEEKDAY_LONG = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
 
@@ -42,7 +35,7 @@
 
   /* ---------------- 상태 ---------------- */
   function defaultState() {
-    return { v: 1, departure: DEPART_DEFAULT, muted: false, days: {}, rewards: {}, updatedAt: 0 };
+    return { v: 1, departure: DEPART_DEFAULT, muted: false, days: {}, celebrate: {}, updatedAt: 0 };
   }
 
   function normalize(s) {
@@ -51,7 +44,7 @@
     out.departure = (/^\d{2}:\d{2}$/.test(s.departure || '') ? s.departure : DEPART_DEFAULT);
     out.muted = !!s.muted;
     out.days = (s.days && typeof s.days === 'object') ? s.days : {};
-    out.rewards = (s.rewards && typeof s.rewards === 'object') ? s.rewards : {};
+    out.celebrate = (s.celebrate && typeof s.celebrate === 'object') ? s.celebrate : {};
     out.updatedAt = Number(s.updatedAt) || 0;
     return out;
   }
@@ -193,11 +186,6 @@
     [523, 587, 659, 784, 880, 1046].forEach(function (f, i) { tone(f, i * 0.09, 0.26, 'triangle', 0.11); });
     [1046, 1318, 1568].forEach(function (f) { tone(f, 0.62, 0.6, 'sine', 0.08); });
   }
-  function sfxOpen() {
-    tone(330, 0, 0.1, 'square', 0.06);
-    tone(660, 0.08, 0.16, 'triangle', 0.1);
-    tone(990, 0.18, 0.3, 'sine', 0.1);
-  }
 
   /* ---------------- 시계 (픽셀 디지털) ---------------- */
   function tickClock() {
@@ -315,7 +303,11 @@
       burstSparks(card, 8);
       if (doneCount() === QUESTS.length) {
         var key = todayKey();
-        if (celebratedToday !== key) {
+        var w = weekInfo();
+        if (w.complete) {
+          celebratedToday = key;
+          setTimeout(function () { showCheer(false); }, 420);
+        } else if (celebratedToday !== key) {
           celebratedToday = key;
           setTimeout(function () { sfxAllDone(); toast('우와! 오늘 아침 퀘스트 다 했어! 🎉'); }, 260);
         }
@@ -396,10 +388,12 @@
       });
     }
     var weekKey = keyOf(mon);
+    var complete = days.every(function (x) { return x.full; });
     return {
       mon: mon, days: days, weekKey: weekKey,
-      eligible: days.every(function (x) { return x.full; }),
-      claimed: state.rewards[weekKey] || null
+      complete: complete,
+      celebrated: !!state.celebrate[weekKey],
+      fullDays: days.filter(function (x) { return x.full; }).length
     };
   }
 
@@ -422,31 +416,23 @@
       host.appendChild(el);
     });
 
-    var gift = document.createElement('button');
-    gift.type = 'button';
-    gift.className = 'wday gift';
-    if (w.eligible && !w.claimed) gift.classList.add('ready');
-    if (w.claimed) gift.classList.add('claimed');
-    gift.innerHTML = '<span class="wday-name">토</span><span class="wday-mark">' +
-      (w.claimed ? (w.claimed.emoji || '🎁') : '🎁') + '</span>';
-    gift.setAttribute('aria-label', '토요일 보물상자');
-    gift.addEventListener('click', function () {
-      var now = new Date();
-      if (w.claimed) { toast('이번 주 보물은 ' + (w.claimed.emoji || '🎁') + ' ' + (w.claimed.label || '') + ' 였어!'); return; }
-      if (!w.eligible) { toast('월~금 5일을 모두 하면 토요일에 열려!'); return; }
-      if (now.getDay() !== 6 && now.getDay() !== 0) { toast('보물상자는 토요일에 열 수 있어!'); return; }
-      showTreasure(w.weekKey, false);
+    var badge = document.createElement('button');
+    badge.type = 'button';
+    badge.className = 'wday trophy';
+    if (w.complete) badge.classList.add('done');
+    badge.innerHTML = '<span class="wday-name">완주</span><span class="wday-mark">🏆</span>';
+    badge.setAttribute('aria-label', '일주일 완주 배지');
+    badge.addEventListener('click', function () {
+      if (w.complete) { showCheer(false); return; }
+      toast('월~금 5일을 모두 하면 완주 배지가 생겨! ' + w.fullDays + '/5일 했어');
     });
-    host.appendChild(gift);
+    host.appendChild(badge);
 
-    var fullDays = w.days.filter(function (d) { return d.full; }).length;
     var cap = $('#week-caption');
-    if (w.claimed) {
-      cap.innerHTML = '이번 주 보물은 <b>' + (w.claimed.emoji || '🎁') + ' ' + (w.claimed.label || '') + '</b>!';
-    } else if (w.eligible) {
-      cap.innerHTML = '월~금 모두 완료! <b>토요일에 보물상자가 열려요</b>';
+    if (w.complete) {
+      cap.innerHTML = '월~금 모두 완료! <b>일주일 완주 🎉</b>';
     } else {
-      cap.innerHTML = '이번 주 <b>' + fullDays + '/5일</b> 완료 · 금요일까지 다 하면 보물상자!';
+      cap.innerHTML = '이번 주 <b>' + w.fullDays + '/5일</b> 완료 · 금요일까지 다 하면 완주 배지!';
     }
   }
 
@@ -615,69 +601,58 @@
     toastTimer = setTimeout(function () { el.hidden = true; }, 2200);
   }
 
-  /* ---------------- 보물상자 ---------------- */
-  var previewMode = false;
-  var pendingWeek = null;
-  var boxOpenTimer = null;
+  /* ---------------- 일주일 완주 축하 ---------------- */
+  var cheerMarkedWeek = null;
 
-  function showTreasure(weekKey, preview) {
-    previewMode = !!preview;
-    pendingWeek = weekKey;
-    var box = $('#box');
-    box.classList.remove('open');
-    box.style.display = '';
-    $('#reward').hidden = true;
-    $('#t-hint').hidden = false;
-    $('#t-kicker').textContent = preview ? '부모님 미리보기' : '토요일 아침이야!';
-    $('#t-title').textContent = '보물상자가 도착했어요!';
-    $('#t-hint').textContent = '상자를 콕 터치해서 열어봐!';
-    $('#treasure-overlay').hidden = false;
-    if (!preview) setTimeout(function () { sfxChime(); }, 200);
+  function confetti(host, count) {
+    var colors = ['#f6c453', '#f2a3b8', '#7fd0a0', '#7fb2ea', '#c9a7ea', '#ffd9a0'];
+    for (var i = 0; i < count; i++) {
+      (function (i) {
+        var c = document.createElement('span');
+        c.className = 'confetti';
+        c.style.left = (6 + Math.random() * 88) + '%';
+        c.style.background = colors[i % colors.length];
+        c.style.animationDelay = (Math.random() * 0.9) + 's';
+        c.style.animationDuration = (1.6 + Math.random() * 1.2) + 's';
+        c.style.setProperty('--drift', (Math.random() * 60 - 30) + 'px');
+        c.style.width = (6 + Math.random() * 6) + 'px';
+        c.style.height = (8 + Math.random() * 8) + 'px';
+        host.appendChild(c);
+        setTimeout(function () { c.remove(); }, 3600);
+      })(i);
+    }
   }
 
-  function openBox() {
-    var box = $('#box');
-    if (box.classList.contains('open')) return;
-    box.classList.add('open');
-    $('#t-hint').hidden = true;
-    sfxOpen();
-
-    var pick = REWARDS[Math.floor(Math.random() * REWARDS.length)];
-
-    burstSparks($('.treasure-inner'), 14);
-    clearTimeout(boxOpenTimer);
-    boxOpenTimer = setTimeout(function () {
-      $('#reward-emoji').textContent = pick.emoji;
-      $('#reward-label').textContent = pick.label;
-      $('#reward-sub').textContent = previewMode
-        ? '미리보기예요 · 실제 기록은 그대로예요'
-        : '토요일 아침 보상이에요!';
-      $('#reward').hidden = false;
-      sfxFanfare();
-      if (!previewMode && pendingWeek) {
-        state.rewards[pendingWeek] = {
-          id: pick.id, emoji: pick.emoji, label: pick.label, at: Date.now()
-        };
+  function showCheer(preview) {
+    var overlay = $('#cheer-overlay');
+    overlay.hidden = false;
+    $('#cheer-kicker').textContent = preview ? '부모님 미리보기' : '월요일부터 금요일까지';
+    $('#cheer-sub').innerHTML = preview
+      ? '시은이가 일주일을 완주하면<br>이렇게 축하해 줄게요!'
+      : '5일 내내 양치·세수·옷 갈아입기를<br>모두 해냈어. 정말 대단해!';
+    confetti($('.cheer'), 26);
+    sfxFanfare();
+    if (!preview) {
+      var w = weekInfo();
+      cheerMarkedWeek = w.weekKey;
+      if (w.complete && !state.celebrate[w.weekKey]) {
+        state.celebrate[w.weekKey] = Date.now();
         saveLocal();
         schedulePush();
-        renderWeek();
       }
-    }, 520);
+      renderWeek();
+    }
   }
 
-  function closeTreasure() {
-    $('#treasure-overlay').hidden = true;
-    clearTimeout(boxOpenTimer);
-    previewMode = false;
-    pendingWeek = null;
+  function closeCheer() {
+    $('#cheer-overlay').hidden = true;
   }
 
-  function maybeShowTreasure() {
+  function maybeShowCheer() {
     var w = weekInfo();
-    if (!w.eligible || w.claimed) return false;
-    var day = new Date().getDay();
-    if (day !== 6 && day !== 0) return false;
-    showTreasure(w.weekKey, false);
+    if (!w.complete || w.celebrated) return false;
+    if (cheerMarkedWeek === w.weekKey) return false;
+    showCheer(false);
     return true;
   }
 
@@ -711,9 +686,9 @@
 
   function resetWeek() {
     var w = weekInfo();
-    if (!window.confirm('이번 주(월~금) 퀘스트 기록과 보물상자를 지울까요? 되돌릴 수 없어요.')) return;
+    if (!window.confirm('이번 주(월~금) 퀘스트 기록과 완주 배지를 지울까요? 되돌릴 수 없어요.')) return;
     w.days.forEach(function (d) { delete state.days[d.key]; });
-    delete state.rewards[w.weekKey];
+    delete state.celebrate[w.weekKey];
     saveLocal();
     schedulePush();
     renderAll();
@@ -735,16 +710,16 @@
 
   /* ---------------- 이벤트 ---------------- */
   function bindEvents() {
-    $('#box').addEventListener('click', openBox);
-    $('#reward-ok').addEventListener('click', closeTreasure);
+    $('#cheer-ok').addEventListener('click', closeCheer);
+    $('#cheer-overlay').addEventListener('click', function (e) {
+      if (e.target === this) closeCheer();
+    });
 
     $('#settings-close').addEventListener('click', closeSettings);
     $('#settings-overlay').addEventListener('click', function (e) {
       if (e.target === this) closeSettings();
     });
-    $('#treasure-overlay').addEventListener('click', function (e) {
-      if (e.target === this && !$('#reward').hidden) closeTreasure();
-    });
+
 
     $('#dep-input').addEventListener('change', function () {
       var v = this.value;
@@ -766,17 +741,16 @@
       if (!state.muted) sfxChime();
     });
 
-    $('#preview-btn').addEventListener('click', function () {
+    $('#cheer-preview-btn').addEventListener('click', function () {
       closeSettings();
-      var w = weekInfo();
-      showTreasure(w.weekKey, true);
+      showCheer(true);
     });
 
     $('#reset-week').addEventListener('click', resetWeek);
 
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') return;
-      if (!$('#treasure-overlay').hidden) { if (!$('#reward').hidden) closeTreasure(); else closeTreasure(); }
+      if (!$('#cheer-overlay').hidden) closeCheer();
       else if (!$('#settings-overlay').hidden) closeSettings();
     });
 
@@ -784,7 +758,7 @@
       if (document.visibilityState === 'visible') {
         renderTimeLeft();
         fbPull();
-        if (lastDayKey !== todayKey()) { renderAll(); maybeShowTreasure(); }
+        if (lastDayKey !== todayKey()) { renderAll(); maybeShowCheer(); }
       }
     });
   }
@@ -801,7 +775,7 @@
     setInterval(function () {
       tickClock();
       renderTimeLeft();
-      if (lastDayKey !== todayKey()) { renderAll(); maybeShowTreasure(); }
+      if (lastDayKey !== todayKey()) { renderAll(); maybeShowCheer(); }
     }, 1000);
 
     setInterval(function () {
@@ -828,7 +802,7 @@
       setSyncNote();
     });
 
-    setTimeout(function () { maybeShowTreasure(); }, 1400);
+    setTimeout(function () { maybeShowCheer(); }, 1400);
   }
 
   if (document.readyState === 'loading') {

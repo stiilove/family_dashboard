@@ -72,7 +72,7 @@
     </div>
   </section>
 
-  <!-- ================= 주간 스탬프 + 토요일 보물상자 ================= -->
+  <!-- ================= 주간 스탬프 + 일주일 완주 배지 ================= -->
   <section class="week-panel" aria-label="이번 주 진행">
     <div class="week-days" id="week-days"></div>
     <p class="week-caption" id="week-caption">이번 주도 힘내!</p>
@@ -102,8 +102,8 @@
     </div>
 
     <div class="row col">
-      <span class="row-label">주간 보물상자 (월~금 모두 완료하면 토요일에 열려요)</span>
-      <button class="btn btn-gold" id="preview-btn" type="button">🎁 토요일 보물상자 미리보기</button>
+      <span class="row-label">주간 완주 (월~금 5일 모두 완료하면 축하 메시지가 떠요)</span>
+      <button class="btn btn-gold" id="cheer-preview-btn" type="button">🏆 일주일 완주 축하 미리보기</button>
       <button class="btn btn-ghost" id="reset-week" type="button">🧹 이번 주 기록 초기화</button>
     </div>
 
@@ -111,29 +111,17 @@
   </div>
 </div>
 
-<!-- ================= 토요일 보물상자 ================= -->
-<div class="overlay treasure-overlay" id="treasure-overlay" hidden>
-  <div class="treasure-inner" role="dialog" aria-modal="true" aria-label="토요일 보물상자">
-    <p class="t-kicker" id="t-kicker">토요일 아침이야!</p>
-    <h2 class="t-title" id="t-title">보물상자가 도착했어요!</h2>
-
-    <button class="box" id="box" type="button" aria-label="보물상자 열기">
-      <span class="box-lid">
-        <span class="box-lid-ribbon"></span>
-        <span class="box-bow"><i></i><i></i><b></b></span>
-      </span>
-      <span class="box-body"><span class="box-ribbon"></span></span>
-      <span class="box-glow" aria-hidden="true"></span>
-    </button>
-
-    <p class="t-hint" id="t-hint">상자를 콕 터치해서 열어봐!</p>
-
-    <div class="reward" id="reward" hidden>
-      <span class="reward-emoji" id="reward-emoji">🎮</span>
-      <strong class="reward-label" id="reward-label">게임 30분 이용권</strong>
-      <span class="reward-sub" id="reward-sub">토요일 아침 보상이에요!</span>
-      <button class="btn btn-gold" id="reward-ok" type="button">확인</button>
+<!-- ================= 일주일 완주 축하 ================= -->
+<div class="overlay cheer-overlay" id="cheer-overlay" hidden>
+  <div class="cheer" role="dialog" aria-modal="true" aria-label="일주일 완주 축하">
+    <p class="cheer-kicker" id="cheer-kicker">월요일부터 금요일까지</p>
+    <h2 class="cheer-title">🎉 일주일간<br>모든 미션을 완료했어요!</h2>
+    <div class="cheer-face-wrap">
+      <img class="cheer-face" src="assets/avatar-sieun.png" alt="시은이">
+      <span class="cheer-trophy" aria-hidden="true">🏆</span>
     </div>
+    <p class="cheer-sub" id="cheer-sub">5일 내내 양치·세수·옷 갈아입기를<br>모두 해냈어. 정말 대단해!</p>
+    <button class="btn btn-gold" id="cheer-ok" type="button">최고야! 🏆</button>
   </div>
 </div>
 

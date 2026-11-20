@@ -33,12 +33,13 @@
 
   // ---- 테스트용 주간 기록 시드 ----
   var seedJson = '';
-  if (SEED === 'week') {
+  if (SEED === 'week' || SEED === 'week4') {
     var base = FIX ? new Date(FIX) : new Date();
     var monday = new Date(base.getFullYear(), base.getMonth(), base.getDate());
     monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
     var days = {};
-    for (var i = 0; i < 5; i++) {
+    var upto = SEED === 'week4' ? 4 : 5;
+    for (var i = 0; i < upto; i++) {
       var d = new Date(monday.getTime());
       d.setDate(d.getDate() + i);
       var k = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
