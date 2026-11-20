@@ -801,8 +801,8 @@ body::before {
   pointer-events: none;
   animation-name: confettiFall;
   animation-timing-function: linear;
-  animation-iteration-count: 1;
-  animation-fill-mode: forwards;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
 }
 @keyframes confettiFall {
   0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }

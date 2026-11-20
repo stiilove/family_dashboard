@@ -618,14 +618,19 @@
         c.style.width = (6 + Math.random() * 6) + 'px';
         c.style.height = (8 + Math.random() * 8) + 'px';
         host.appendChild(c);
-        setTimeout(function () { c.remove(); }, 8600);
       })(i);
     }
+  }
+
+  function clearConfetti() {
+    var old = document.querySelectorAll('.cheer .confetti');
+    for (var i = 0; i < old.length; i++) old[i].remove();
   }
 
   function showCheer(preview) {
     var overlay = $('#cheer-overlay');
     overlay.hidden = false;
+    clearConfetti();
     $('#cheer-kicker').textContent = preview ? '부모님 미리보기' : '월요일부터 금요일까지';
     $('#cheer-sub').innerHTML = preview
       ? '시은이가 일주일을 완주하면<br>이렇게 축하해 줄게요!'
@@ -646,6 +651,7 @@
 
   function closeCheer() {
     $('#cheer-overlay').hidden = true;
+    clearConfetti();
   }
 
   function maybeShowCheer() {
