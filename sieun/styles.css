@@ -850,8 +850,12 @@ body::before {
   .date-block { grid-area: date; }
   .clock-panel { grid-area: clock; }
   .weather { grid-area: weather; }
-  .clock { font-size: clamp(26px, 6vw, 40px); }
-  .date-line strong { font-size: clamp(22px, 6vw, 30px); }
+  .clock { font-size: clamp(19px, 5vw, 30px); }
+  .clock-panel { padding: 6px 10px; border-radius: 18px; }
+  .date-line strong { font-size: clamp(19px, 5.2vw, 27px); }
+  .date-line span { font-size: clamp(14px, 4vw, 19px); }
+  .topbar { gap: 8px; }
+  .brand { font-size: 11px; }
 
   .status { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .depart {
