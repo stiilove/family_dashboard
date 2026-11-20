@@ -69,6 +69,8 @@
       'window.addEventListener("error",function(e){parent.postMessage({t:"err",m:(e.message||"")+" | "+(e.filename||"")+":"+(e.lineno||"")},"*")});' +
       'window.addEventListener("unhandledrejection",function(e){parent.postMessage({t:"err",m:"unhandled "+e.reason},"*")});' +
       'var _e=console.error;console.error=function(){parent.postMessage({t:"err",m:Array.prototype.join.call(arguments," ")},"*");_e.apply(console,arguments)};' +
+      'try{localStorage.removeItem("sieunMorning.v1")}catch(e){}' +
+      'var _f=window.fetch;window.fetch=function(u,o){var s=String(u&&u.url?u.url:u);if(s.indexOf("firebasedatabase.app")>-1)return Promise.reject(new Error("blocked in check page"));return _f.apply(this,arguments)};' +
       '<\/script>';
     f.srcdoc = html.replace('<head>', '<head>' + inject);
     f.addEventListener('load', function () { setTimeout(measure, 2600); });

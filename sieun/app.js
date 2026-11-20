@@ -759,6 +759,8 @@
 
     $('#mute-toggle').addEventListener('click', function () { setMuted(!state.muted); });
 
+    $('#btn-settings').addEventListener('click', openSettings);
+
     $('#btn-sound').addEventListener('click', function () {
       setMuted(!state.muted);
       if (!state.muted) sfxChime();

@@ -120,7 +120,6 @@ body::before {
   letter-spacing: .02em;
   line-height: 1.16;
   color: #4b3a2e;
-  text-shadow: 0 3px 0 rgba(75, 58, 46, .07);
 }
 
 .ampm {
@@ -139,6 +138,8 @@ body::before {
   border: 2px solid #fff;
   min-width: 0;
 }
+
+.weather-tools { display: inline-flex; gap: 6px; align-items: center; }
 
 .weather-head {
   display: flex;
@@ -415,7 +416,7 @@ body::before {
   margin-left: clamp(4px, .8vw, 12px);
 }
 .wday.gift .wday-name { color: #b98724; }
-.wday.gift .wday-mark { font-size: clamp(18px, 2.6vh, 24px); }
+.wday.gift .wday-mark { font-size: clamp(20px, 3vh, 28px); }
 .wday.gift.ready {
   animation: giftBounce 1.6s ease-in-out infinite;
   box-shadow: 0 0 0 4px rgba(246, 196, 83, .28), 0 6px 16px rgba(243, 191, 69, .35);
@@ -442,6 +443,7 @@ body::before {
 /* ==================== quests ==================== */
 
 .quests {
+  padding-top: 16px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(12px, 1.6vw, 22px);
@@ -556,10 +558,10 @@ body::before {
 
 .q-bubble {
   position: absolute;
-  top: clamp(-16px, -1.9vh, -10px);
+  top: clamp(-19px, -2.1vh, -12px);
   left: 50%;
   transform: translateX(-50%);
-  background: #fff;
+  background: #fff3cc;
   border: 2px solid #f6cf74;
   color: #b1791a;
   border-radius: 999px;
@@ -579,7 +581,7 @@ body::before {
   left: 50%;
   width: 10px;
   height: 10px;
-  background: #fff;
+  background: #fff3cc;
   border-right: 2px solid #f6cf74;
   border-bottom: 2px solid #f6cf74;
   transform: translateX(-50%) rotate(45deg);
