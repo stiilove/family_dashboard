@@ -106,71 +106,29 @@ body::before {
 
 .clock {
   display: flex;
-  align-items: center;
-  gap: .12em;
-  font-size: clamp(46px, 9.2vh, 86px);
-  color: #4b3a2e;
+  align-items: flex-end;
+  justify-content: center;
+  gap: .32em;
+  font-size: clamp(30px, 6.6vh, 58px);
   line-height: 1;
+  color: #4b3a2e;
+}
+
+.clock .time {
+  font-family: "Press Start 2P", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 1em;
+  letter-spacing: .02em;
+  line-height: 1.16;
+  color: #4b3a2e;
+  text-shadow: 0 3px 0 rgba(75, 58, 46, .07);
 }
 
 .ampm {
-  font-size: .3em;
+  font-family: var(--font);
+  font-size: .36em;
   color: var(--ink-soft);
-  writing-mode: horizontal-tb;
-  margin-right: .12em;
-  align-self: flex-start;
-  margin-top: .18em;
+  margin-bottom: .12em;
 }
-
-.digits { display: flex; align-items: center; gap: .05em; }
-
-.digit { position: relative; width: .56em; height: 1em; }
-
-.seg {
-  position: absolute;
-  background: currentColor;
-  opacity: 0.07;
-  border-radius: 2px;
-  transition: opacity .12s linear;
-}
-.seg.on { opacity: 1; }
-
-.seg.a, .seg.d, .seg.g {
-  left: .1em; right: .1em; height: .115em;
-  clip-path: polygon(6% 0, 94% 0, 100% 50%, 94% 100%, 6% 100%, 0 50%);
-}
-.seg.a { top: 0; }
-.seg.d { bottom: 0; }
-.seg.g { top: calc(50% - .0575em); }
-
-.seg.f, .seg.b, .seg.e, .seg.c {
-  width: .115em; height: calc(50% - .095em);
-  clip-path: polygon(0 6%, 50% 0, 100% 6%, 100% 94%, 50% 100%, 0 94%);
-}
-.seg.f { left: 0; top: .035em; }
-.seg.b { right: 0; top: .035em; }
-.seg.e { left: 0; bottom: .035em; }
-.seg.c { right: 0; bottom: .035em; }
-
-.colon {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: .16em;
-  height: 1em;
-  width: .2em;
-  align-items: center;
-  padding-bottom: .04em;
-}
-.colon i {
-  display: block;
-  width: .11em;
-  height: .11em;
-  border-radius: 50%;
-  background: currentColor;
-  animation: colonBlink 2s steps(1, end) infinite;
-}
-@keyframes colonBlink { 0%, 60% { opacity: 1; } 61%, 100% { opacity: .18; } }
 
 /* --- weather --- */
 .weather {
@@ -948,7 +906,7 @@ body::before {
   .date-block { grid-area: date; }
   .clock-panel { grid-area: clock; }
   .weather { grid-area: weather; }
-  .clock { font-size: clamp(38px, 8vw, 56px); }
+  .clock { font-size: clamp(26px, 6vw, 40px); }
   .date-line strong { font-size: clamp(22px, 6vw, 30px); }
 
   .status { grid-template-columns: minmax(0, 1fr); gap: 8px; }
@@ -990,6 +948,6 @@ body::before {
 
 /* short landscape tablets: shrink the clock a touch */
 @media (orientation: landscape) and (max-height: 720px) {
-  .clock { font-size: clamp(38px, 8.4vh, 62px); }
+  .clock { font-size: clamp(26px, 6.2vh, 46px); }
   .q-title { font-size: clamp(17px, 2.9vh, 26px); }
 }

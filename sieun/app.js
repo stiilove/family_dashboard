@@ -31,11 +31,6 @@
   var WEEKDAY = ['일', '월', '화', '수', '목', '금', '토'];
   var WEEKDAY_LONG = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
 
-  var SEG_MAP = {
-    0: 'abcdef', 1: 'bc', 2: 'abged', 3: 'abgcd', 4: 'fgbc',
-    5: 'afgcd', 6: 'afgecd', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg'
-  };
-
   /* ---------------- 유틸 ---------------- */
   function $(sel) { return document.querySelector(sel); }
   function pad2(n) { return String(n).padStart(2, '0'); }
@@ -204,46 +199,15 @@
     tone(990, 0.18, 0.3, 'sine', 0.1);
   }
 
-  /* ---------------- 시계 (7세그먼트) ---------------- */
-  function buildClock() {
-    var wrap = $('#digits');
-    wrap.innerHTML = '';
-    for (var i = 0; i < 4; i++) {
-      if (i === 2) {
-        var colon = document.createElement('span');
-        colon.className = 'colon';
-        colon.innerHTML = '<i></i><i></i>';
-        wrap.appendChild(colon);
-      }
-      var digit = document.createElement('div');
-      digit.className = 'digit';
-      'abcdefg'.split('').forEach(function (s) {
-        var seg = document.createElement('span');
-        seg.className = 'seg ' + s;
-        seg.dataset.seg = s;
-        digit.appendChild(seg);
-      });
-      wrap.appendChild(digit);
-    }
-  }
-
-  var clockDigits = [];
-
-  function setDigit(el, value) {
-    var on = SEG_MAP[value] || '';
-    for (var i = 0; i < el.children.length; i++) {
-      var seg = el.children[i];
-      seg.classList.toggle('on', on.indexOf(seg.dataset.seg) !== -1);
-    }
-  }
-
+  /* ---------------- 시계 (픽셀 디지털) ---------------- */
   function tickClock() {
     var now = new Date();
     var h = now.getHours();
     var m = now.getMinutes();
     var h12 = h % 12 === 0 ? 12 : h % 12;
-    var values = [Math.floor(h12 / 10), h12 % 10, Math.floor(m / 10), m % 10];
-    for (var i = 0; i < clockDigits.length; i++) setDigit(clockDigits[i], values[i]);
+    var txt = pad2(h12) + ':' + pad2(m);
+    var el = $('#time-text');
+    if (el.textContent !== txt) el.textContent = txt;
     $('#ampm').textContent = h < 12 ? '오전' : '오후';
   }
 
@@ -825,8 +789,6 @@
 
   /* ---------------- 시작 ---------------- */
   function init() {
-    buildClock();
-    clockDigits = Array.prototype.slice.call(document.querySelectorAll('.digit'));
     buildQuests();
     bindEvents();
     applyMuteUI(state.muted);

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<title>viewport check (임시)</title>
+<style>
+  html, body { margin: 0; background: #1d1d1f; color: #e8e8e8; font: 12px/1.45 "SFMono-Regular", Menlo, monospace; }
+  #log { padding: 8px 12px; white-space: pre-wrap; max-height: 160px; overflow: auto; border-bottom: 1px solid #333; }
+  iframe { display: block; border: 0; background: #fff; }
+</style>
+</head>
+<body>
+<div id="log">loading…</div>
+<iframe id="f" width="1180" height="820" src="about:blank"></iframe>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var W = parseInt(q.get('w') || '1180', 10);
+  var H = parseInt(q.get('h') || '820', 10);
+  var f = document.getElementById('f');
+  f.width = W; f.height = H;
+  f.style.width = W + 'px'; f.style.height = H + 'px';
+
+  var BASE = 'https://stiilove.github.io/family_dashboard/sieun/';
+  var errs = [];
+  var log = document.getElementById('log');
+  function show(extra) {
+    log.textContent = 'size ' + W + 'x' + H + '\n' + extra;
+  }
+  show('loading…');
+
+  function measure() {
+    var d = f.contentDocument, w = f.contentWindow;
+    if (!d) { show('no doc'); return; }
+    var out = [];
+    var stage = d.querySelector('.stage');
+    out.push('doc scrollHeight=' + d.documentElement.scrollHeight + ' (h=' + d.documentElement.clientHeight + ')');
+    out.push('body scrollHeight=' + d.body.scrollHeight + ' / scrollWidth=' + d.body.scrollWidth + ' clientW=' + d.documentElement.clientWidth);
+    out.push('stage h=' + Math.round(stage.getBoundingClientRect().height));
+    var quests = d.querySelectorAll('.quest');
+    out.push('quests=' + quests.length + ' card=' + Math.round(quests[0].getBoundingClientRect().width) + 'x' + Math.round(quests[0].getBoundingClientRect().height));
+    out.push('clock=' + d.querySelector('#time-text').textContent + ' / ' + d.querySelector('#ampm').textContent);
+    out.push('mins=' + d.querySelector('#mins').textContent);
+    out.push('week cells=' + d.querySelectorAll('.wday').length + ' caption=' + d.querySelector('#week-caption').textContent);
+    out.push('weather cells=' + d.querySelectorAll('.wc').length + ' tip=' + d.querySelector('#tip').textContent);
+    out.push('dust=' + d.querySelector('#dust').textContent);
+    var imgs = Array.prototype.slice.call(d.images).map(function (im) { return (im.getAttribute('src') || '').split('/').pop() + ':' + im.naturalWidth; });
+    out.push('images ' + imgs.join(', '));
+    var bad = w.performance.getEntriesByType('resource').filter(function (r) {
+      return r.responseStatus >= 400 || (r.initiatorType !== 'fetch' && r.transferSize === 0 && r.decodedBodySize === 0);
+    });
+    out.push('bad resources: ' + (bad.length ? bad.map(function (b) { return b.name.split('/').pop() + '(' + b.responseStatus + ')'; }).join(', ') : 'none'));
+    var fonts = Array.prototype.slice.call(d.fonts || []).map(function (ff) { return ff.family + ' ' + ff.status; });
+    out.push('fonts: ' + fonts.join(' | '));
+    out.push('errors: ' + (errs.length ? errs.join(' / ') : 'none'));
+    show(out.join('\n'));
+  }
+
+  window.addEventListener('message', function (e) {
+    if (e.data && e.data.t === 'err') { errs.push(e.data.m); }
+  });
+
+  fetch(BASE).then(function (r) { return r.text(); }).then(function (html) {
+    var inject = '<base href="' + BASE + '"><script>' +
+      'window.addEventListener("error",function(e){parent.postMessage({t:"err",m:(e.message||"")+" | "+(e.filename||"")+":"+(e.lineno||"")},"*")});' +
+      'window.addEventListener("unhandledrejection",function(e){parent.postMessage({t:"err",m:"unhandled "+e.reason},"*")});' +
+      'var _e=console.error;console.error=function(){parent.postMessage({t:"err",m:Array.prototype.join.call(arguments," ")},"*");_e.apply(console,arguments)};' +
+      '<\/script>';
+    f.srcdoc = html.replace('<head>', '<head>' + inject);
+    f.addEventListener('load', function () { setTimeout(measure, 2600); });
+  }).catch(function (e) { show('fetch failed ' + e); });
+})();
+</script>
+</body>
+</html>
